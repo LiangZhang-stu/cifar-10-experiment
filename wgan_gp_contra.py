@@ -91,6 +91,26 @@ class ResDisBlock(nn.Module):
     def forward(self, x):
         return self.residual(x) + self.shortcut(x)
 
+class ResDisLinear(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        shortcut = []
+        if in_channels != out_channels:
+            shortcut.append(
+                nn.Linear(in_channels, out_channels))
+        self.shortcut = nn.Sequential(*shortcut)
+
+        residual = [
+            nn.ReLU(),
+            nn.Linear(in_channels, out_channels),
+            nn.ReLU(),
+            nn.Linear(out_channels, out_channels),
+        ]
+        self.residual = nn.Sequential(*residual)
+        res_arch_init(self)
+
+    def forward(self, x):
+        return self.residual(x) + self.shortcut(x)
 
 class ResConDiscriminator(nn.Module):
     def __init__(self):
@@ -102,7 +122,7 @@ class ResConDiscriminator(nn.Module):
             ResDisBlock(128, 128),
             nn.ReLU(),
             nn.AdaptiveAvgPool2d((1, 1)))
-        self.linear_1 = nn.Linear(128, 128)
+        self.linear_1 = ResDisLinear(128, 128)
 
         self.linear_2 = nn.Linear(128, 1)
         res_arch_init(self)
