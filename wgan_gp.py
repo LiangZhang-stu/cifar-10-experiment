@@ -3,6 +3,73 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
+class Generator(nn.Module):
+    def __init__(self, z_dim):
+        super().__init__()
+        self.z_dim = z_dim
+        self.linear = nn.Linear(self.z_dim, 4 * 4 * 512)
+        self.main = nn.Sequential(
+            nn.ConvTranspose2d(
+                512, 256, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.ConvTranspose2d(
+                256, 128, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.ConvTranspose2d(
+                128, 64, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1),
+            nn.Tanh())
+
+    def forward(self, z):
+        x = self.linear(z)
+        x = x.view(x.size(0), -1, 4, 4)
+        x = self.main(x)
+        return x
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.main = nn.Sequential(
+            # 32
+            nn.Conv2d(
+                3, 64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(
+                64, 64, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.1),
+            # 16
+            nn.Conv2d(
+                64, 128, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(
+                128, 128, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.1),
+            # 8
+            nn.Conv2d(
+                128, 256, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(0.1),
+            nn.Conv2d(
+                256, 256, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.1),
+            # 4
+            nn.Conv2d(
+                256, 512, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(0.1))
+
+        self.linear = nn.Linear(32 // 8 * 32 // 8 * 512, 1)
+
+    def forward(self, x):
+        x = self.main(x)
+        x = torch.flatten(x, start_dim=1)
+        x = self.linear(x)
+        return x
+
 
 class ResGenBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -26,7 +93,7 @@ class ResGenBlock(nn.Module):
         return self.residual(x) + self.shortcut(x)
 
 
-class ResConGenerator(nn.Module):
+class ResGenerator(nn.Module):
     def __init__(self, z_dim):
         super().__init__()
         self.z_dim = z_dim
@@ -91,24 +158,8 @@ class ResDisBlock(nn.Module):
     def forward(self, x):
         return self.residual(x) + self.shortcut(x)
 
-class ResDisLinear(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.shortcut = nn.Linear(in_channels, out_channels)
 
-        residual = [
-            nn.ReLU(),
-            nn.Linear(in_channels, out_channels),
-            nn.ReLU(),
-            nn.Linear(out_channels, out_channels),
-        ]
-        self.residual = nn.Sequential(*residual)
-        res_arch_init(self)
-
-    def forward(self, x):
-        return self.residual(x) + self.shortcut(x)
-
-class ResConDiscriminator(nn.Module):
+class ResDiscriminator(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
@@ -118,18 +169,14 @@ class ResConDiscriminator(nn.Module):
             ResDisBlock(128, 128),
             nn.ReLU(),
             nn.AdaptiveAvgPool2d((1, 1)))
-        self.linear_1 = ResDisLinear(128, 128)
-
-        self.linear_2 = nn.Linear(128, 1)
+        self.linear = nn.Linear(128, 1)
         res_arch_init(self)
 
     def forward(self, x):
         x = self.model(x)
         x = torch.flatten(x, start_dim=1)
-        f = self.linear_1(x)
-        f = f / torch.norm(f, p=2, dim=1).reshape(f.shape[0], 1)
-        x = self.linear_2(x)
-        return x, f
+        x = self.linear(x)
+        return x
 
 
 def res_arch_init(model):

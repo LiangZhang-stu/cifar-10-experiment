@@ -24,7 +24,7 @@ net_D_models = {
 
 tf = transforms.Compose([
     transforms.ToPILImage(),
-    transforms.RandomApply([transforms.RandomRotation(30)], p=0.5),
+    transforms.RandomApply([transforms.RandomRotation(10)], p=0.5),
     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.ToTensor()
@@ -147,13 +147,13 @@ class GAN():
                 trans_imgs.append(tf(real_imgs[i]).unsqueeze(0).detach())
 
             trans_imgs = torch.cat(trans_imgs, dim=0).to(real_imgs.device)
-            adv_trans, f_trans = self.D(x=trans_imgs)
+            _, f_trans = self.D(x=trans_imgs)
 
         adv_real, f_real = self.D(x=real_imgs)
         adv_fake, _ = self.D(x=gen_imgs)
 
         if self.mode == 'wgan':
-            wd = 0.5 * (adv_real.mean() + adv_trans.mean()) - adv_fake.mean()
+            wd = adv_real.mean() - adv_fake.mean()
             df_loss = -wd
             df_gp = gradient_penalty(self.D, real_imgs, gen_imgs)
 
