@@ -178,7 +178,7 @@ class GAN():
             # dcon_loss = -torch.log2((contra * torch.eye(contra.shape[0]).to(contra.device)).sum(dim=1) /
             #                         contra.sum(dim=1)).mean()
             contra_p = torch.exp((f_real * f_trans).sum(dim=1) / self.t)
-            contra_n = torch.exp(torch.mm(f_real, f_other) / self.t).sum(dim=1)
+            contra_n = torch.exp(torch.mm(f_real, f_other.T) / self.t).sum(dim=1)
 
             dcon_loss = -torch.log2(contra_p / (contra_p + contra_n)).mean()
             d_loss = d_loss + self.lambda_dcon * dcon_loss
