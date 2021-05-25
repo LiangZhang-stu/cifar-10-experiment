@@ -24,9 +24,9 @@ net_D_models = {
 
 tf = transforms.Compose([
     transforms.ToPILImage(),
+    transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomApply([transforms.RandomRotation(10)], p=0.5),
     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
-    transforms.RandomHorizontalFlip(p=0.5),
     transforms.ToTensor()
 ])
 
@@ -85,10 +85,12 @@ class GAN():
             _, f_p = self.D(x=imgs_p)
             _, f_n = self.D(x=imgs_n)
 
-
-            contra = torch.exp((f_fake * f_p).sum(dim=1)/self.t)
-            gcon_loss = -torch.log2(contra / (contra + torch.exp(
-                torch.mm(f_fake, f_n.T)/self.t).sum(dim=1))).mean()
+            # contra = torch.exp((f_fake * f_p).sum(dim=1)/self.t)
+            # gcon_loss = -torch.log2(contra / (contra + torch.exp(
+            #     torch.mm(f_fake, f_n.T)/self.t).sum(dim=1))).mean()
+            contra_p = torch.exp((f_p * f_fake).sum(dim=1) / self.t)
+            contra_n = torch.exp(torch.mm(f_p, f_n.T) / self.t).sum(dim=1)
+            gcon_loss = -torch.log2(contra_p / (contra_p + contra_n)).mean()
 
         if self.mode == 'wgan':
             gf_loss = -adv_fake.mean()
@@ -111,7 +113,7 @@ class GAN():
 
         return errG
 
-    def train_D(self, real_imgs):
+    def train_D(self, real_imgs, other_imgs):
 
         def gradient_penalty(f, real, fake=None):
             def interpolate(a, b=None):
@@ -148,6 +150,7 @@ class GAN():
 
             trans_imgs = torch.cat(trans_imgs, dim=0).to(real_imgs.device)
             _, f_trans = self.D(x=trans_imgs)
+            _, f_other = self.D(x=other_imgs)
 
         adv_real, f_real = self.D(x=real_imgs)
         adv_fake, _ = self.D(x=gen_imgs)
@@ -170,11 +173,14 @@ class GAN():
             d_loss = d_loss + self.lambda_gp * df_gp
 
         if self.use_dcon:
-            contra = torch.exp(torch.mm(f_real, f_trans.T) / self.t)
+            # contra = torch.exp(torch.mm(f_real, f_trans.T) / self.t)
 
-            dcon_loss = -torch.log2((contra * torch.eye(contra.shape[0]).to(contra.device)).sum(dim=1) /
-                                    contra.sum(dim=1)).mean()
+            # dcon_loss = -torch.log2((contra * torch.eye(contra.shape[0]).to(contra.device)).sum(dim=1) /
+            #                         contra.sum(dim=1)).mean()
+            contra_p = torch.exp((f_real * f_trans).sum(dim=1) / self.t)
+            contra_n = torch.exp(torch.mm(f_real, f_other) / self.t).sum(dim=1)
 
+            dcon_loss = -torch.log2(contra_p / (contra_p + contra_n)).mean()
             d_loss = d_loss + self.lambda_dcon * dcon_loss
 
         self.optimizer_D.zero_grad()

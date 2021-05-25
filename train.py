@@ -145,9 +145,11 @@ with trange(step, args.total_steps, dynamic_ncols=True) as pbar:
         # ---------------------
         for _ in range(args.n_d):
             imgs = next(looper)
+            other_imgs = next(looper)
             # Configure input
             imgs = imgs.to(device)
-            errD = gan.train_D(real_imgs=imgs)
+            other_imgs = other_imgs.to(device)
+            errD = gan.train_D(real_imgs=imgs, other_imgs=other_imgs)
         add_scalar_dict(writer, errD, it + 1, 'D')
 
         # -----------------
