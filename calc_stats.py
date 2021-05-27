@@ -8,10 +8,8 @@ from torchvision import datasets, transforms
 from score.inception import InceptionV3
 from score.fid import get_statistics
 
-
 DIM = 2048
 device = torch.device('cuda:0')
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Calculate states of CIFAR10/STL10")

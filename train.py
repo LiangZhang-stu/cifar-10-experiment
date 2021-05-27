@@ -54,7 +54,7 @@ def parse(args=None):
     #                     help="number of cpu threads to use during batch generation")
     parser.add_argument("--num_workers", dest='num_workers', type=int, default=cpu_count(),
                         help="number of cpu threads to use during batch generation")
-    parser.add_argument("--gpu", type=bool, default=False, help="whether to use gpu")
+    parser.add_argument("--gpu", dest="gpu", type=bool, default=False, help="whether to use gpu")
 
     parser.add_argument("--use_gcon", dest="use_gcon", type=bool, default=True, help="whether to use gcon")
     parser.add_argument("--use_dcon", dest="use_dcon", type=bool, default=True, help="whether to use dcon")
