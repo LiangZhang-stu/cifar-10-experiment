@@ -1,0 +1,12 @@
+matplotlib
+tensorboardX
+torchsummary
+dataclasses
+numpy
+Pillow
+scipy
+torch
+torchvision
+tqdm
+typing-extensions
+tensorboard

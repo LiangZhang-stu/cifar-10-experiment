@@ -16,7 +16,6 @@ from os.path import join
 from helpers import add_scalar_dict
 from tqdm._tqdm import trange
 from tensorboardX import SummaryWriter
-from tensorboard.backend.event_processing import event_accumulator
 import torch
 import random
 import numpy as np
@@ -27,8 +26,8 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    cudnn.deterministic = True
+    cudnn.benchmark = False
 
 
 def infiniteloop(dataloader):
@@ -53,7 +52,7 @@ def parse(args=None):
     parser.add_argument("--b2", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
     # parser.add_argument("--num_workers", dest='num_workers', type=int, default=cpu_count(),
     #                     help="number of cpu threads to use during batch generation")
-    parser.add_argument("--num_workers", dest='num_workers', type=int, default=4,
+    parser.add_argument("--num_workers", dest='num_workers', type=int, default=cpu_count(),
                         help="number of cpu threads to use during batch generation")
     parser.add_argument("--gpu", type=bool, default=False, help="whether to use gpu")
 
@@ -118,7 +117,7 @@ looper = infiniteloop(train_dataloader)
 print('Training images:', len(train_dataset))
 set_seed(args.seed)
 
-cudnn.benchmark = True
+# cudnn.benchmark = True
 print('load model')
 gan = GAN(args)
 if args.is_resume:
@@ -177,6 +176,8 @@ with trange(step, args.total_steps, dynamic_ncols=True) as pbar:
         # set learning rate
         gan.step_G_D()
 
+
+        # test generate image's is score and fid score
         if (it + 1) % args.eval_step == 0:
             gan.eval()
             fake_imgs = []

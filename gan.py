@@ -73,22 +73,18 @@ class GAN():
 
         if self.use_gcon:
             noise_p = torch.rand(noise.shape).to(noise.device)
-            noise_p = self.thelta * torch.rand(1).to(noise.device) \
+            noise_p = noise.clone() + self.thelta * torch.rand(1).to(noise.device) \
                       * noise_p / torch.norm(noise_p, p=2, dim=1).reshape(noise_p.shape[0],-1)
 
-            noise_n = torch.rand(noise.shape).to(noise.device)
-            noise_n = (torch.rand(1) * (1 - self.thelta) + self.thelta).to(noise.device)\
-                      * noise_n / torch.norm(noise_n, p=2, dim=1).reshape(noise_n.shape[0],-1)
-            imgs_p = self.G(z=(noise_p+noise).detach())
-            imgs_n = self.G(z=(noise_n+noise).detach())
+            noise_n = torch.randn_like(noise).to(noise.device)
+
+            imgs_p = self.G(z=noise_p)
+            imgs_n = self.G(z=noise_n)
 
             _, f_p = self.D(x=imgs_p)
             _, f_n = self.D(x=imgs_n)
 
-            # contra = torch.exp((f_fake * f_p).sum(dim=1)/self.t)
-            # gcon_loss = -torch.log2(contra / (contra + torch.exp(
-            #     torch.mm(f_fake, f_n.T)/self.t).sum(dim=1))).mean()
-            contra_p = torch.exp((f_p * f_fake).sum(dim=1) / self.t)
+            contra_p = torch.exp((f_fake * f_p).sum(dim=1) / self.t)
             contra_n = torch.exp(torch.mm(f_p, f_n.T) / self.t).sum(dim=1)
             gcon_loss = -torch.log2(contra_p / (contra_p + contra_n)).mean()
 
