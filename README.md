@@ -40,7 +40,7 @@ python calc_stats.py --output=cifar_10_fid_stats.npz --use_torch --data_path=you
 ## Usage
 
 
-#### To train an DCGAN on Cifar10
+#### To train an DCGAN(CNN) on Cifar10
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 \
@@ -52,13 +52,6 @@ python train.py --n_d=1 --gpu=True --data_save_root=output --inception_weight_pa
 ```bash
 CUDA_VISIBLE_DEVICES=0 \
 python train.py --n_d=1 --gpu=True --data_save_root=output --inception_weight_path=data/weight/inceptionv3_weight_name --ms_file_name=cifar_10_fid_stats.npz --experiment_name=wgan_gp_cnn --total_steps=100000 --latent_dim=100 --mode='wgan' --model='wgan_gp_cnn' --batch_size=128	--b1=0 --b2=0.9
-```
-
-#### To train an WGAN(Resnet)) on Cifar10
-
-```bash
-CUDA_VISIBLE_DEVICES=0 \
-python train.py --n_d=5 --gpu=True --data_save_root=output --inception_weight_path=data/weight/inceptionv3_weight_name --ms_file_name=cifar_10_fid_stats.npz --experiment_name=wgan_gp_resnet --total_steps=100000 --latent_dim=128 --mode='wgan' --model='wgan_gp_resnet' --batch_size=64 --b1=0 --b2=0.9
 ```
 
 #### To train an WGAN(Resnet) on Cifar10
