@@ -1,7 +1,7 @@
 # GAN-Cifar10-PyTorch
 
 A graduation design project:
-Collected GAN's improved models, and innovation introduces comparison learning to help GAN improve the generated image effect.
+Collected GAN's improved models, and innovation introduces Contrastive Learning to help GAN improve the generated image effect.
 
 This work adopts the evaluation index calculation method of IS and FID in Project(https://github.com/w86763777/pytorch-inception-score-fid)
 
