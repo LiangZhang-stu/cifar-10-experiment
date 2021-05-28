@@ -143,7 +143,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6,
 
 
 def get_statistics(images, num_images=None, batch_size=50, use_torch=False,
-                   verbose=False, parallel=False):
+                   verbose=False, parallel=False, inception_dir=None):
     """when `images` is a python generator, `num_images` should be given"""
 
     if num_images is None:
@@ -155,7 +155,8 @@ def get_statistics(images, num_images=None, batch_size=50, use_torch=False,
                 "`num_images` should be given")
 
     block_idx1 = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
-    model = InceptionV3([block_idx1]).to(device)
+    model = InceptionV3(output_blocks=[block_idx1],
+    weight_path=inception_dir).to(device)
     model.eval()
 
     if parallel:

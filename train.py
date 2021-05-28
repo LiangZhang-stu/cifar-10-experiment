@@ -81,7 +81,7 @@ def parse(args=None):
     parser.add_argument('--data_save_root', dest='data_save_root', type=str, default='')
     parser.add_argument('--ms_file_name', dest='ms_file_name', type=str, default='')
     parser.add_argument('--data_path', dest='data_path', type=str, default='')
-    parser.add_argument('--weight_path', dest='weight_path', type=str, default='')
+    parser.add_argument('--inception_weight_path', dest='inception_weight_path', type=str, default='')
     parser.add_argument("--experiment_name", dest='experiment_name',
                         default=datetime.datetime.now().strftime("%I-%M%p on %B %d_%Y"))
     return parser.parse_args()
@@ -197,7 +197,7 @@ with trange(step, args.total_steps, dynamic_ncols=True) as pbar:
                 gbar.update(args.test_size)
 
             fake_imgs = torch.cat(fake_imgs, dim=0)
-            IS, FID = get_inception_score_and_fid(fake_imgs, ms_file_name, verbose=True, weight_path=args.weight_path)
+            IS, FID = get_inception_score_and_fid(fake_imgs, ms_file_name, verbose=True, weight_path=args.inception_weight_path)
 
             writer.add_scalar('Score/IS_mean', IS[0], it + 1)
             writer.add_scalar('Score/IS_std', IS[1], it + 1)
